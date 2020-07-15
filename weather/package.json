@@ -1,18 +1,14 @@
 {
-  "name": "mysql",
+  "name": "weather",
   "version": "1.0.0",
   "description": "",
-  "main": "\t\t\t\t",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "\t\t"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mysql-import": "^4.0.24"
+    "postman-request": "^2.88.1-postman.23"
   }
 }
