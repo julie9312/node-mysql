@@ -18,6 +18,7 @@ const errorHandler = require("./middleware/error");
 // 우리가 만든 라우터 파일 가져온다.
 
 const bootcamps = require("./routes/bootcamps");
+const users = require("./routes/users");
 
 //환경 설정 파일의 내용을 로딩한다.
 dotenv.config({ path: "./config/config.env" });
@@ -37,6 +38,8 @@ app.use(morgan("combined"));
 //라우터 연결 :url의 path와 라우터 파일과 연결
 //(아래방식으로 안하면 api가 추후 추가 될 때 유지보수하기 힘듬)
 app.use("/api/v1/bootcamps", bootcamps);
+//라우터 연결 : url의 path와 라우터 user 연결
+app.use("/api/v1/users", users);
 
 // 위의 에러를 처리하기 위해서, 에러 핸들러 미들웨어 연결
 app.use(errorHandler);
