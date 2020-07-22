@@ -11,6 +11,7 @@ const router = express.Router();
 
 //각 경로별로 데이터 가져올수 있도록 , router 셋팅
 router.route("/").get(getBootcamps).post(createBootcamp);
+
 router
   .route("/:id")
   .get(getBootcamp)

@@ -1,12 +1,3 @@
-// const express = require("express");
-// const app = express();
-
-// app.get("/", function (req, res) {
-//   res.send("Hello World");
-// });
-
-// app.listen(3000);
-
 // express : 웹 서버를 동작시키는 프레임워크
 const express = require("express");
 const dotenv = require("dotenv");
@@ -35,6 +26,10 @@ app.use(logger);
 
 app.use(morgan("combined"));
 
+app.use(function (req, res, next) {
+  res.status(503).send("사이트 점검 중입니다");
+});
+
 //라우터 연결 :url의 path와 라우터 파일과 연결
 //(아래방식으로 안하면 api가 추후 추가 될 때 유지보수하기 힘듬)
 app.use("/api/v1/bootcamps", bootcamps);
@@ -51,3 +46,14 @@ app.listen(
   PORT,
   console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
 );
+
+// // server.js (이거는 실험용임 )
+// var jwt = require("jsonwebtoken");
+// var token = jwt.sign({ _id: 1 }, process.env.ACCESS_TOKEN_SECRET);
+
+// console.log(token);
+// console.log(process.env.ACCESS_TOKEN_SECRET);
+
+// //클라이언트로부터 받은 토큰이, 진짜인지 확인하는 작업
+// const data = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+// console.log(data);
