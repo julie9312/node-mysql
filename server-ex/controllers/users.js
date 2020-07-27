@@ -4,6 +4,7 @@ const validator = require("validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { query } = require("../db/mysql_connection");
+const sendEmail = require("../utils/sendMail");
 //@desc 회원가입
 //@route POST/api/v1/users    => 나
 //@route POST/api/v1/users/register
@@ -37,6 +38,7 @@ exports.createUser = async (req, res, next) => {
     if (e.errno == 1062) {
       //이메일 중복된것이다.
       res.status(400).json({ success: false, errno: 1, message: "이메일중복" });
+      return;
     } else {
       res.status(500).json({ success: false, error: e });
       return;
@@ -48,10 +50,20 @@ exports.createUser = async (req, res, next) => {
 
   try {
     [result] = await connection.query(query, data);
+    const message = "welcome";
+    try {
+      await sendEmail({
+        email: "hij6776@naver.com",
+        subject: "회원가입",
+        message: message,
+      });
+    } catch (e) {
+      res.status(500).json({ success: false, error: e });
+    }
+
     res.status(200).json({ success: true, token: token });
   } catch (e) {
     res.status(500).json({ success: false, error: e });
-    return;
   }
 };
 
@@ -115,7 +127,9 @@ exports.changePasswd = async (req, res, next) => {
     [rows] = await connection.query(query, data);
     let savedPasswd = rows[0].passwd;
 
-    let isMatch = bcrypt.compareSync(passwd, savedPasswd);
+    let isMatch = await bcrypt.compareSync(passwd, savedPasswd);
+    // let isMatch = bcrypt.compareSync(passwd, savedPasswd);
+
     if (isMatch != true) {
       res.status(401).json({ success: false, result: isMatch });
       return;
@@ -141,22 +155,81 @@ exports.changePasswd = async (req, res, next) => {
   }
 };
 
-//@desc 내정보 가져오기
-//@route GET/api/users/:id
-
+// @desc    내정보 가져오기
+// @route   GET /api/v1/users
 exports.getMyInfo = async (req, res, next) => {
-  let id = req.params.id;
+  console.log("내 정보 가져오는 API", req.user);
 
-  let query = `select * from user where id = ${id}`;
+  res.status(200).json({ success: true, result: req.user });
+};
+
+//@desc 로그아웃 api : DB에서 해당 유저의 현재 토큰값을 삭제
+//@route POST/ api/v1/users/logout
+//@parameters no
+
+exports.logout = async (req, res, next) => {
+  //토큰테이블에서, 현재 이 헤더에 있는 토큰으로 , 삭제한다.
+  let token = req.user.token;
+  let user_id = req.user.id;
+  let query = `delete from token where user_id = ${user_id} and token = "${token}`;
   try {
-    [rows] = await connection.query(query);
-    if (rows.length != 1) {
-      res.status(400).json({ success: false });
+    [result] = await connection.query(query);
+    if (result.affectedRows == 1) {
+      res.status(200).json({ success: true, result: result });
+      return;
     } else {
-      delete rows[0].passwd;
-      res.status(200).json({ success: true, result: rows[0] });
+      res.status(400).json({ success: false });
     }
   } catch (e) {
     res.status(500).json({ success: false, error: e });
+  }
+};
+
+//안드로이드 사용하고, 아이폰도 사용하고, 집 컴도 사용
+// 이 서비스를 각각의 디바이스 마다 로그인 하여 사용중이었다.
+// 전체 디바이스 전부 다 로그아웃 을 시키게 하는 API
+
+//@route POST/ api/v1/users/logoutAll
+//@parameters no
+
+exports.logoutAll = async (req, res, next) => {
+  //토큰테이블에서, 현재 이 헤더에 있는 토큰으로 , 삭제한다.
+  let user_id = req.user.id;
+  let query = `delete from token where user_id = ${user_id} `;
+  try {
+    [result] = await connection.query(query);
+    res.status(200).json({ success: true, result: result });
+    return;
+  } catch (e) {
+    res.status(500).json({ success: false, error: e });
+  }
+};
+
+//회원탈퇴 : db에서 해당 회원의 유저 테이블 정보 삭제
+//=> 유저 정보가 있는 다른 테이블도 정보 삭제.
+
+//@desc 회원탈퇴 : 유저 테이블에서 삭제, 토큰 테이블에서 삭제
+//@route DELETE /api/v1/users
+
+exports.deleteUser = async (req, res, next) => {
+  let user_id = req.user.id;
+
+  let query = `delete from user where id = ${user_id}`;
+  const conn = await connection.getConnection();
+  try {
+    await conn.beginTransaction();
+    //첫번째 테이블에서 정보 삭제
+    [result] = await conn.query(query);
+    // 두번째 테이블에서 정보 삭제
+    query = `delete from token where user_id = ${user_id}`;
+
+    [result] = await connection.query(query);
+    await conn.commit();
+    res.status(200).json({ success: true });
+  } catch (e) {
+    await conn.rollback();
+    res.status(500).json({ success: false, error: e });
+  } finally {
+    conn.release();
   }
 };

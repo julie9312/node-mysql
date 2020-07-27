@@ -26,9 +26,16 @@ app.use(logger);
 
 app.use(morgan("combined"));
 
-app.use(function (req, res, next) {
-  res.status(503).send("사이트 점검 중입니다");
-});
+// app.use(function(req, res, next){
+//   if(req.method === 'GET'){
+//     res.send('GET 방식은 안됩니다.')
+//   }
+//   next()
+// })
+
+// app.use(function (req, res, next) {
+//   res.status(503).send("사이트 점검중입니다.");
+// });
 
 //라우터 연결 :url의 path와 라우터 파일과 연결
 //(아래방식으로 안하면 api가 추후 추가 될 때 유지보수하기 힘듬)

@@ -1,75 +1,79 @@
-//데이터베이스 연결
-const connection = require("../db/mysql_connection");
+const connection = require("../db/mysql_connection.js");
+const chalk = require("chalk");
+// mysql은 커넥션 파일에 require()되어있고 여기서 그 파일을 불러왔기 때문에 여기서 require('mysql')을 할 필요 없다.
 
-// @desc 모든 정보를 다 조회
-// @route GET/ api/vi/memos
+// @desc    모든 메모 가져오기
+// @route   GET /api/v1/memos
+exports.getMemos = async (req, res, next) => {
+  // 1. 데이터베이스에 접속해서 쿼리한다.
+  // 2. 그 결과를 res에 담아서 클라이언트에 보내준다.
+  let query = `select * from memos where user_id = ${req.user.user_id}`;
 
-exports.getMemos = function (req, res, next) {
-  //1.데이터베이스에 접속해서, 쿼리한다.
-  //2. 그 결과를 res 에 담아서 보내준다.
-  let query = "select * from memo;";
-
-  connection.query(query, function (error, results, fields) {
-    console.log(results);
-    res.status(200).json({
-      success: true,
-      results: {
-        items: results,
-      },
-    });
-  });
-  connection.end();
+  try {
+    [rows] = await connection.query(query);
+    res.status(200).json({ success: true, results: { items: rows } });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e });
+  }
 };
 
-// @desc 메모생성하기
-// @route POST/api/v1/memos
-// @body {id:3, title:"안녕", comment:"좋다"}
-
-exports.createMemo = (req, res, next) => {
+// @desc    메모 생성하기
+// @route   POST /api/v1/memos
+// @body    {title: "안녕", content: "좋다"}
+exports.createMemo = async (req, res, next) => {
+  let user_id = req.user.user_id;
   let title = req.body.title;
-  let comment = req.body.comment;
-  let query = "insert into memo (title, comment) values (? , ?)";
-  connection.query(query, [title, comment], function (error, results, fields) {
-    console.log(results);
-    res.status(200).json({ success: true });
-  });
+  let content = req.body.content;
+
+  // 쿼리 인서트 방법1 : 루프 인서트는 youtube 폴더 참고
+  let query = "insert into memos (user_id, title, content) values ?";
+
+  let values = [user_id, title, content];
+
+  try {
+    [result] = await connection.query(query, [[values]]);
+    console.log(chalk.blueBright(JSON.stringify(result)));
+    res.status(200).json({ success: true, result: result });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e });
+  }
 };
 
-// @desc 메모수정하기 (query 위랑 다른 방식으로 )
-// @route PUT/api/v1/memos
-// @body {id:3, title:"안녕", comment:"좋다"}
-exports.updateMemo = function (req, res, next) {
+// @desc    메모 갱신하기
+// @route   PUT /api/v1/memos/:id
+// @body    {title: "안녕", content: "좋다"}
+exports.updateMemo = async (req, res, next) => {
   let id = req.params.id;
   let title = req.body.title;
-  let comment = req.body.comment;
-  let query = `update memo 
-               set title = "${title}",
-               comment = "${comment}"
-               where id = ${id} `;
+  let content = req.body.content;
 
-  let query2 = "update memo set title = ?, comment = ? where id = ?";
-  connection.query(query2, [title, comment, id], function (
-    error,
-    results,
-    fields
-  ) {
-    console.log(results);
-    res.status(200).json({ success: true });
-    connection.end();
-  });
+  // // 쿼리 인서트 방법 2
+  // let query = `update memos set title = "${title}", content = "${content}" where id = ${id}`
+
+  // 쿼리 인서트 방법 1
+  let query2 = "update memos set title = ?, content = ? where id = ?";
+
+  try {
+    [result] = await connection.query(query2, [title, content, id]);
+    console.log(chalk.blueBright(JSON.stringify(result)));
+    res.status(200).json({ success: true, result: result });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e });
+  }
 };
-// @desc 메모삭제하기
-// @route DELETE/api/v1/memos/:id
-// @body {id:3, title:"안녕", comment:"좋다"}
 
-exports.deleteMemo = (req, res, next) => {
+// @desc    메모 지우기
+// @route   DELETE /api/v1/memos/:id
+exports.deleteMemo = async (req, res, next) => {
   let id = req.params.id;
 
-  let query = `delete from memo where id = ${id} `;
+  let query = `delete from memos where id = ${id}`;
 
-  connection.query(query, function (error, results, fields) {
-    console.log(results);
-    res.status(200).json({ success: true });
-    connection.end();
-  });
+  try {
+    [result] = await connection.query(query);
+    console.log(chalk.blueBright(JSON.stringify(result)));
+    res.status(200).json({ success: true, result: result });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e });
+  }
 };
