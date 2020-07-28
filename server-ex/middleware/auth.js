@@ -33,6 +33,7 @@ const auth = async (req, res, next) => {
     console.log(rows);
   } catch (e) {
     res.status(500).json({ error: "DB 에러" });
+    return;
   }
 
   // 반복문 돌면서, 유저 아이디와 토큰이 맞는지 체크
