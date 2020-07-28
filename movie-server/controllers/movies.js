@@ -319,7 +319,7 @@ exports.changePasswd = async (req, res, next) => {
 //@route POST/ api/v1/movies/forgotPasswd
 
 exports.forgotPasswd = async (req, res, next) => {
-  let user = req.user;
+  let movie_token = req.movie_token;
   //암호회된 문자열 만드는 방법
   const resetToken = crypto.randomBytes(20).toString("hex");
   const resetPasswdToken = crypto
@@ -328,12 +328,11 @@ exports.forgotPasswd = async (req, res, next) => {
     .digest("hex");
 
   //유저테이블에, reset_passwd_token 컬럼에 저장
-  let query = "update movie_user set reset_passwd_token = ? where id = ?";
-  let data = [resetPasswdToken, user.id];
+  let query = `update movie_user set reset_password_token = "${resetPasswdToken}" where id =${user.user_id}`;
 
   try {
-    [result] = await connection.query(query, data);
-    user.reset_passwd_token = resetPasswdToken;
+    [reslut] = await connection.query(query);
+    movie_token.reset_password_token = resetPasswdToken;
     res.status(200).json({ success: true, data: user });
   } catch (e) {
     res.status(500).json({ success: false, error: e });
@@ -350,15 +349,13 @@ exports.forgotPasswd = async (req, res, next) => {
 
 exports.resetPasswd = async (req, res, next) => {
   const resetPasswdToken = req.params.resetPasswdToken;
-  const user_id = req.user.id;
+  const user_id = req.movie_token.user_id;
 
-  let query = "select * from movie_user where id = ?";
-  let data = [user_id];
-
+  let query = `select * from movie_user where id = ${user_id}`;
   try {
-    [rows] = await connection.query(query, data);
-    savedResetPasswdToken = rows[0].reset_passwd_token;
-    if (savedResetPasswdToken === resetPasswdToken) {
+    [rows] = await connection.query(query);
+    savedResetPasswordToken = rows[0].reset_password_token;
+    if (!savedResetPasswordToken === resetPasswordToken) {
       res.status(400).json({ success: false });
       return;
     }
@@ -366,17 +363,18 @@ exports.resetPasswd = async (req, res, next) => {
     res.status(500).json({ success: false, error: e });
     return;
   }
+
   let passwd = req.body.passwd;
   const hashedPasswd = await bcrypt.hash(passwd, 8);
-  query =
-    "update movie_user set passwd = ?, reset_passwd_token = '' where id = ? ";
-  data = [hashedPasswd, user_id];
-  delete req.user.reset_passwd_token;
+  query = `update movie_user set password = "${hashedPassword}",reset_password_token ="" where id = ${user_id}`;
+
+  delete req.movie_token.reset_password_token;
 
   try {
     [result] = await connection.query(query, data);
     res.status(200).json({ success: true, data: req.user });
   } catch (e) {
     res.status(500).json({ success: false, error: e });
+    return;
   }
 };
