@@ -6,7 +6,10 @@ const morgan = require("morgan");
 const logger = require("./middleware/logger");
 
 // 라우터 require
-const movies = require("./routes/movies.js");
+const movies = require("./routes/movies");
+const users = require("./routes/users");
+const favorites = require("./routes/favorites");
+const reply = require("./routes/reply");
 
 // 환경설정 파일 로딩
 dotenv.config({ path: "./config/config.env" });
@@ -26,6 +29,9 @@ app.use(morgan("dev"));
 
 //라우터 연결 : url의 path와 라우터 user 연결
 app.use("/api/v1/movies", movies);
+app.use("/api/v1/users", users);
+app.use("/api/v1/favorites", favorites);
+app.use("/api/v1/reply", reply);
 
 const PORT = process.env.PORT || 5100;
 

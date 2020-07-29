@@ -1,29 +1,17 @@
 const express = require("express");
-const auth = require("../middleware/auth");
-
-const router = express.Router();
-
 const {
   getMovies,
   searchMovies,
   getMoviesByYear,
-  getMoviesByAttnd,
-  RegisterMovies,
-  loginMovies,
-  deleteMovieUser,
-  changePasswd,
-  forgotPasswd,
-  resetPasswd,
-} = require("../controllers/movies.js");
+  getMovieByAttendance,
+} = require("../controllers/movies");
 
-router.route("/").get(getMovies).delete(auth, deleteMovieUser);
+const router = express.Router();
+
+// localhost:5100api/v1/movies
+router.route("/").get(getMovies);
 router.route("/search").get(searchMovies);
 router.route("/year").get(getMoviesByYear);
-router.route("/attnd").get(getMoviesByAttnd);
-router.route("/register").post(RegisterMovies);
-router.route("/login").post(loginMovies);
-router.route("/change").post(changePasswd);
-router.route("/forgotPasswd").post(auth, forgotPasswd);
-router.route("/resetPasswd/:resetPasswdToken").post(auth, resetPasswd);
+router.route("/attendance").get(getMovieByAttendance);
 
 module.exports = router;
