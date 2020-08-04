@@ -89,12 +89,11 @@ exports.getMyReservations = async (req, res, next) => {
   console.log(compareTime);
   // 영화시작시간이 현재 시간보다 이후의 시간으로 예약된 정보만 가져오는 쿼리.
   // 현재 2020-07-31 12:15  <  2020-07-31 14:00
-  let query =
-    "select r.* , m.title \
-    from movie_reservation as r \
-    join movie as m \
-    on r.movie_id = m.id \
-    where user_id = ? and start_time > ? ";
+  let query = `select r.* , m.title 
+    from movie_reservation as r 
+    join movie as m 
+    on r.movie_id = m.id 
+    where user_id = ? and start_time > ? `;
 
   let data = [user_id, compareTime];
 
