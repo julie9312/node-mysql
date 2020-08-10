@@ -1,6 +1,0 @@
-{
-  "MYSQL_HOST": "database-1.cjcxvajze0z5.ap-northeast-2.rds.amazonaws.com",
-  "MYSQL_USER": "node_user",
-  "DB_NAME": "my_test",
-  "DB_PASSWD": "node1234test"
-}
